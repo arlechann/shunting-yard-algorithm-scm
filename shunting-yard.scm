@@ -1,3 +1,10 @@
+(define (flatten ls)
+  (define (rec ls acc)
+    (cond ((null? ls) acc)
+          ((list? (car ls)) (rec (cdr ls) (rec (car ls) acc)))
+          (else (rec (cdr ls) (cons (car ls) acc)))))
+  (reverse! (rec ls '())))
+
 (define (calc form)
   (define (init-stack) '())
   (define stack-empty? null?)
@@ -35,13 +42,12 @@
     (define (rec form stack converted)
       (cond ((and (null? form) (stack-empty? stack)) converted)
             ((null? form) (rec '() (pop stack) (cons (top stack) converted)))
-            ((list? (car form)) (rec (cdr form) stack (append! (rec (car form) (init-stack) '()) converted)))
+            ((list? (car form)) (rec (cdr form) stack (cons (rec (car form) (init-stack) '()) converted)))
             ((symbol? (car form))
               (if (prior? (car form) (top stack))
                   (rec (cdr form) (push (car form) stack) converted)
                   (rec form (pop stack) (cons (top stack) converted))))
             (else (rec (cdr form) stack (cons (car form) converted)))))
-
-    (reverse! (rec form (init-stack) '())))
+    (reverse! (flatten (rec form (init-stack) '()))))
 
   (calculate-rev-polish (infix->rev-polish form)))
